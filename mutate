@@ -1,0 +1,205 @@
+#!/usr/bin/perl
+# mutate - (c) 2007 - 2008 dan stephenson (ispyhumanfly@gmail.com)...
+
+use 5.010_000;
+use warnings;
+use strict;
+
+BEGIN { 
+
+    # will eventually check for mplayer/mencoder/x264/faac on all platforms...
+}
+
+use Getopt::Long qw/:config no_ignore_case /;
+use Pod::Usage;
+use Cwd qw/ realpath /;
+
+my $VERSION = '1.0.0';
+
+sub init {
+
+    my %obj;
+
+    GetOptions(
+
+        'output|o=s'   => \$obj{options}->{'output'},
+        'vbit|v=i'     => \$obj{options}->{'vbit'},
+        'abit|a=i'     => \$obj{options}->{'abit'},
+        'scale|x=s'    => \$obj{options}->{'scale'},
+        'pass|p=i'     => \$obj{options}->{'pass'},
+        'threads|t=i'  => \$obj{options}->{'threads'},
+        'mencoder|m=s' => \$obj{options}->{'mencoder'},
+        'help|?|h'     => \$obj{options}->{'help'},
+    );
+
+    pod2usage "\nMutate v$VERSION, x264/faac Video Conversion Tool\n"
+        if defined $obj{options}->{help} or not $ARGV[0];
+
+    if ( "@ARGV" =~ /^\w+:\/\/\d+|\w+$/g ) {
+
+        eval { $obj{options}->{'input'} = realpath("@ARGV") };
+        $obj{options}->{'input'} = "@ARGV" if $@;
+
+        open my $mplayer,
+
+            "mplayer \"$obj{options}->{input}\" -ao null -vo null -msglevel "
+            . 'identify=6 -vf cropdetect -ss 120 -endpos 20 2> mutate.err |';
+
+        for ( grep /^ID|CROP/g, <$mplayer> ) {
+
+            when (/^ID_VIDEO_WIDTH=(\d+)/x) {
+                $obj{identify}->{'width'} = $1;
+            }
+
+            when (/^ID_VIDEO_HEIGHT=(\d+)/x) {
+                $obj{identify}->{'height'} = $1;
+            }
+
+            when (/.*crop=(\d+:\d+:\d+:\d+)/x) {
+                $obj{identify}->{'crop'} = $1;
+            }
+        }
+        close $mplayer;
+    }
+    else {
+
+        say 'An MPlayer compatible File/Device must be clearly defined.' and exit(1);
+    }
+
+    unless (( defined $obj{options}->{output} )
+        and ( $obj{options}->{output} =~ /\.mp4$/x ) )
+    {
+        say 'Option o must be defined and contain a .mp4 extension.' and exit(1);
+    }
+
+    for ( keys %{ $obj{options} } ) {
+
+        when ('vbit') {
+
+            unless (( defined $obj{options}->{vbit} )
+                and ( $obj{options}->{vbit} > 0 ) )
+            {
+                $obj{options}->{vbit} = 1200;
+            }
+        }
+
+        when ('abit') {
+
+            unless (( defined $obj{options}->{abit} )
+                and ( $obj{options}->{abit} > 0 ) )
+            {
+                $obj{options}->{abit} = 128;
+            }
+        }
+
+        when ('scale') {
+
+            unless (( defined $obj{options}->{scale} )
+                and ( $obj{options}->{scale} =~ /\d+:\d+/x ) )
+            {
+                $obj{options}->{scale} = "$obj{identify}->{width}:$obj{identify}->{height}";
+            }
+        }
+
+        when ('pass') {
+
+            unless (( defined $obj{options}->{pass} )
+                and ( $obj{options}->{pass} >= 1 ) )
+            {
+                $obj{options}->{pass} = 2;
+            }
+        }
+
+        when ('threads') {
+
+            unless (( defined $obj{options}->{threads} )
+                and ( $obj{options}->{threads} <= 16 ) )
+            {
+                $obj{options}->{threads} = 0;
+            }
+        }
+    }
+    run(%obj);
+
+}
+
+sub run {
+
+    my %obj = @_;
+
+    for ( my $pass = 1; $pass <= $obj{options}->{pass}; $pass++ ) {
+
+        my ( $video_opts, $audio_opts, $multi_pass );
+
+        if ( ( $pass == 1 ) and ( $obj{options}->{pass} == 1 ) ) {
+
+            $video_opts
+                = "-ovc x264 -x264encopts threads=$obj{options}->{threads}"
+                . ':subq=5:bframes=4:cabac:b_adapt:deblock:frameref=4:b_pyramid'
+                . ":qp_step=4:weight_b:chroma_me:qcomp=0.7:bitrate=$obj{options}->{vbit}";
+
+            $audio_opts = "-oac faac -faacopts mpeg=4:object=2:br=$obj{options}->{abit}";
+        }
+
+        elsif ( ( $pass >= 1 )
+            and ( $pass != $obj{options}->{pass} ) )
+        {
+
+            $multi_pass = 1 if $pass == 1;
+            $multi_pass = 3 if $pass >= 2;
+
+            $video_opts
+                = "-ovc x264 -x264encopts threads=$obj{options}->{threads}"
+                . ':subq=5:bframes=4:cabac:b_adapt:deblock:frameref=4:b_pyramid'
+                . ":qp_step=4:weight_b:chroma_me:qcomp=0.7:turbo=1:pass=$multi_pass"
+                . ":bitrate=$obj{options}->{vbit} -passlogfile xpass.log";
+
+            $audio_opts = '-nosound';
+        }
+
+        elsif ( $pass == $obj{options}->{pass} ) {
+
+            $video_opts
+                = "-ovc x264 -x264encopts threads=$obj{options}->{threads}"
+                . ':subq=5:bframes=4:cabac:b_adapt:deblock:frameref=4:b_pyramid'
+                . ':qp_step=4:weight_b:chroma_me:qcomp=0.7:pass=2'
+                . ":bitrate=$obj{options}->{vbit} -passlogfile mutate.pass";
+
+            $audio_opts = "-oac faac -faacopts mpeg=4:object=2:br=$obj{options}->{abit}";
+        }
+
+        open my $mencoder,
+
+            "mencoder -of lavf \"$obj{options}->{input}\" -o \"$obj{options}->{output}\" "
+            . "-vf pullup,softskip,crop=$obj{identify}->{crop},scale=$obj{options}->{scale},harddup"
+            . " $obj{options}->{mencoder} $video_opts $audio_opts 2> mutate.err |";
+
+        print $_ while <$mencoder>;
+        close $mencoder;
+    }
+    unlink 'mutate.err', 'mutate.pass' and exit(0);
+
+}
+
+init();
+
+__END__
+
+=head1 SYNOPSIS
+
+<file/device> <-o file.mp4> [options]
+
+Options:
+
+  -h, -?, --help  This help / usage screen...
+  -o, --output    Output file name...
+  -v, --vbit      Video bitrate to use...
+  -a, --abit      Audio bitrate to use...
+  -x, --scale     Video scale to use...
+  -p, --pass      Number of passes to use...
+  -t, --threads   How many threads to use...
+  -m, --mencoder  Additional mencoder options...
+
+Example: mutate dvd://1 -o file.mp4 -m "-af volume=10"
+
+=cut
