@@ -43,7 +43,7 @@ sub init {
         open my $mplayer,
 
             "mplayer \"$obj{options}->{input}\" -ao null -vo null -msglevel "
-            . 'identify=6 -vf cropdetect -ss 120 -endpos 20 2> mutate.err |';
+            . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> mutate.err |';
 
         for ( grep /^ID|CROP/g, <$mplayer> ) {
 
