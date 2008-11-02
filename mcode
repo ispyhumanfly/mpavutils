@@ -32,7 +32,7 @@ sub init {
         'help|?|h'     => \$obj{options}->{'help'},
     );
 
-    pod2usage "\nmCode v$VERSION, x264/faac Video Conversion Tool\n"
+    pod2usage "\nmCode v$VERSION, x264/faac Video Encoder\n"
         if defined $obj{options}->{help} or not $ARGV[0];
 
     if ( "@ARGV" =~ /^\w+:\/\/\d+|\w+$/g ) {
