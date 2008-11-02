@@ -152,7 +152,7 @@ sub run {
                 = "-ovc x264 -x264encopts threads=$obj{options}->{threads}"
                 . ':subq=5:bframes=4:cabac:b_adapt:deblock:frameref=4:b_pyramid'
                 . ":qp_step=4:weight_b:chroma_me:qcomp=0.7:turbo=1:pass=$multi_pass"
-                . ":bitrate=$obj{options}->{vbit} -passlogfile xpass.log";
+                . ":bitrate=$obj{options}->{vbit} -passlogfile mutate.pass";
 
             $audio_opts = '-nosound';
         }
