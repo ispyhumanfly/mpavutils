@@ -174,7 +174,7 @@ sub run {
             . "-vf pullup,softskip,crop=$obj{identify}->{crop},scale=$obj{options}->{scale},harddup"
             . " $obj{options}->{mencoder} $video_opts $audio_opts 2> mutate.err |";
 
-        print $_ while <$mencoder>;
+        print while <$mencoder>;
         close $mencoder;
     }
     unlink 'mutate.err', 'mutate.pass' and exit(0);
