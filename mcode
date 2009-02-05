@@ -43,7 +43,7 @@ sub init {
         open my $mplayer,
 
             "mplayer \"$obj{options}->{input}\" -ao null -vo null -msglevel "
-            . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> mutate.err |';
+            . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> mcode.err |';
 
         for ( grep /^ID|CROP/g, <$mplayer> ) {
 
@@ -152,7 +152,7 @@ sub run {
                 = "-ovc x264 -x264encopts threads=$obj{options}->{threads}"
                 . ':subq=5:bframes=4:cabac:b_adapt:deblock:frameref=4:b_pyramid'
                 . ":qp_step=4:weight_b:chroma_me:qcomp=0.7:turbo=1:pass=$multi_pass"
-                . ":bitrate=$obj{options}->{vbit} -passlogfile mutate.pass";
+                . ":bitrate=$obj{options}->{vbit} -passlogfile mcode.pass";
 
             $audio_opts = '-nosound';
         }
@@ -163,7 +163,7 @@ sub run {
                 = "-ovc x264 -x264encopts threads=$obj{options}->{threads}"
                 . ':subq=5:bframes=4:cabac:b_adapt:deblock:frameref=4:b_pyramid'
                 . ':qp_step=4:weight_b:chroma_me:qcomp=0.7:pass=2'
-                . ":bitrate=$obj{options}->{vbit} -passlogfile mutate.pass";
+                . ":bitrate=$obj{options}->{vbit} -passlogfile mcode.pass";
 
             $audio_opts = "-oac faac -faacopts mpeg=4:object=2:br=$obj{options}->{abit}";
         }
@@ -172,12 +172,12 @@ sub run {
 
             "mencoder -of lavf \"$obj{options}->{input}\" -o \"$obj{options}->{output}\" "
             . "-vf pullup,softskip,crop=$obj{identify}->{crop},scale=$obj{options}->{scale},harddup"
-            . " $obj{options}->{mencoder} $video_opts $audio_opts 2> mutate.err |";
+            . " $obj{options}->{mencoder} $video_opts $audio_opts 2> mcode.err |";
 
         print while <$mencoder>;
         close $mencoder;
     }
-    unlink 'mutate.err', 'mutate.pass' and exit(0);
+    unlink 'mcode.err', 'mcode.pass' and exit(0);
 
 }
 
