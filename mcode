@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# mcode (c) 2007 - 2008 MUTATE Video Encoding Tools
+# mcode (c) 2007 - 2009 MUTATE Video Encoding Tools
 
 use 5.010_000;
 use warnings;
