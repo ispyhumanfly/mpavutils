@@ -5,7 +5,7 @@ use 5.010_000;
 use warnings;
 use strict;
 
-BEGIN { 
+BEGIN {
 
     # will eventually check for mplayer/mencoder/x264/faac on all platforms...
 }
@@ -52,7 +52,7 @@ sub init {
             }
 
             when (/^ID_VIDEO_HEIGHT=(\d+)/x) {
-                $obj{identify}->{'height'} = $1;
+				$obj{identify}->{'height'} = $1;
             }
 
             when (/.*crop=(\d+:\d+:\d+:\d+)/x) {
@@ -119,7 +119,7 @@ sub init {
             }
         }
     }
-    run(%obj);
+    goto(run(%obj));
 
 }
 
