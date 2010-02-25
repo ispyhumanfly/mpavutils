@@ -1,0 +1,230 @@
+#!/usr/bin/perl
+# bbinfo (c) 2007-2008 nemesis, l.l.c.
+
+use warnings;
+use strict;
+
+BEGIN {
+
+    # NEMESIS_HOME was defined...
+    if ( ( exists $ENV{NEMESIS_HOME} ) and ( -d $ENV{NEMESIS_HOME} . '/bb' ) ) {
+        push @INC, $ENV{NEMESIS_HOME} . '/bb/lib';
+
+        # the bb namespace required environment variable...
+        $ENV{WE_LIKE_MOVIES} = $ENV{NEMESIS_HOME} . '/bb';
+    }
+
+    # BB_HOME was defined and overrides NEMESIS_HOME
+    elsif ( ( exists $ENV{BB_HOME} ) and ( -d $ENV{BB_HOME} ) ) {
+        push @INC, $ENV{BB_HOME} . '/lib';
+
+        # the bb namespace required environment variable...
+        $ENV{WE_LIKE_MOVIES} = $ENV{BB_HOME};
+    }
+    else {
+        die "ERROR: You must set BB_HOME to the path of Blackbeard in your environment.\n";
+    }
+}
+
+use Getopt::Long;
+use Pod::Usage;
+use Cwd qw/ realpath /;
+use File::Copy;
+use POSIX;
+
+# load the bb namespace...
+use BB;
+
+# subroutine used for initial configuration...
+sub init {
+
+    # preamble...
+    my %info_obj;
+
+    # objects / data-structures for bbinfo...
+    $info_obj{options} = new Getopt::Long::Parser( config => ['no_ignore_case'] );
+    $info_obj{tools}   = {};
+
+    # welcome message for help / usage information...
+    my $welcome = "\nbbinfo (c) 2007-2008 nemesis, l.l.c.\n";
+
+    # command line options...
+    $info_obj{options}->getoptions(
+        'input|i=s'  => \$info_obj{options}->{input},
+        'title|t=i'  => \$info_obj{options}->{title},
+        'extended|e' => \$info_obj{options}->{extended},
+        'help|?|h'   => \$info_obj{options}->{help},
+    );
+    
+    # caveats...
+    if ( ( defined $info_obj{options}->{input} ) and ( defined $info_obj{options}->{title} ) ) {
+        die "The --input and --title options cannot be used together.\n";
+    }
+
+    # --help option...
+    pod2usage($welcome) if defined $info_obj{options}->{help};
+
+    # --title option...
+    if ( defined $info_obj{options}->{title} ) {
+
+        # a brief message...
+        print "Gathering information from title $info_obj{options}->{title}...\n";
+
+        # extract dvd information...
+        $info_obj{tools} = new BB(
+            input => 'dvd://' . $info_obj{options}->{title},
+            type  => 'mplayer',
+            debug => 1,
+        );
+    }
+
+    # --input option...
+    elsif ( ( defined $info_obj{options}->{input} )
+        and ( $info_obj{options}->{input} =~ /\.vob$/x ) )
+    {
+        # get the absolute path to this input file...
+        $info_obj{options}->{input} = realpath($info_obj{options}->{input});
+        
+        # a brief message...
+        print "Gathering information from file $info_obj{options}->{input}...\n";
+
+        # provided there is a '.rip' file associated with the source input...
+        if ( -e $info_obj{options}->{input} . '.rip' ) {
+            $info_obj{tools} = new BB(
+                input => $info_obj{options}->{input} . '.rip',
+                type  => 'file',
+                debug => 1,
+            );
+        }
+        else {
+            die "There is NO '.rip' file associated with the input specified.\n";
+        }
+    }
+
+    # no --title and no --input option...
+    elsif ( not defined $info_obj{options}->{input} ) {
+
+        # a brief message...
+        print "Gathering information from disc...\n";
+
+        # extract dvd information...
+        $info_obj{tools} = new BB(
+            input => 'dvd://1',
+            type  => 'mplayer',
+            debug => 0,
+        );
+
+        # determine the obvious movie title...
+        my $title = $info_obj{tools}->do_calc( longest_title => 1 );
+        $info_obj{options}->{input} = 'dvd://' . $title;
+
+        # a brief message...
+        print "Gathering information from title $title...\n";
+
+        # kill the bb namespace and try again...
+        $info_obj{tools}->do_killbb();
+
+        # extract dvd information once more...
+        $info_obj{tools} = new BB(
+            input => $info_obj{options}->{input},
+            type  => 'mplayer',
+            debug => 1,
+        );
+    }
+    else {
+        die "Either no disc could be read or the input/title you specified is invalid!\n";
+    }
+
+    # ok, let's get things started...
+    run(%info_obj);
+
+}
+
+# subroutine that makes this program useful...
+sub run {
+
+    # preamble...
+    my %info_obj = @_;
+
+    # a brief message...
+    print "\nTitle Infomation:\n\n";
+    
+    # let's display our titles...
+    my $titles = $info_obj{tools}->get_titles();
+    while ( my ( $title, $value ) = each %{$titles} ) {
+        print
+            "\ttitle: $title\t chapters: $value->{chapters}\t " .
+            "angles: $value->{angles}\t length: $value->{length}\n";
+    }
+    print "\n\tLongest Title: " . $info_obj{tools}->do_calc( longest_title => 1 ) . "\n";
+
+    # a brief message...
+    print "\n\nSubtitle Infomation:\n\n";
+
+    # let's display our subtitles...
+    my $subs = $info_obj{tools}->get_subs();
+    while ( my ( $sid, $value ) = each %{$subs} ) {
+        print "\tsid: $value->{sid}\t language: $value->{lang}\n";
+    }
+
+    # a brief message...
+    print "\n\nLanguage Infomation:\n\n";
+
+    # let's display our languages...
+    my $langs = $info_obj{tools}->get_langs();
+    while ( my ( $aid, $value ) = each %{$langs} ) {
+        print "\taid: $value->{aid}\t language: $value->{lang}\n";
+    }
+   
+    # --extended option WAS used...
+    if ( defined $info_obj{options}->{extended} ) {
+
+        # a brief message...
+        print "\n\nVideo Information:\n\n";
+
+        # let's display our video info...
+        my $video = $info_obj{tools}->get_video();
+        while ( my ( $attribute, $value ) = each %{$video} ) {
+            print "\t$attribute\t => $value\n";
+        }
+
+        # auto crop detection...
+        print "\n\tAutocrop: " . $info_obj{tools}->get_video( autocrop => 1 ) . "\n";
+
+        # a brief message...
+        print "\n\nAudio Information:\n\n";
+
+        # let's display our audio info...
+        my $audio = $info_obj{tools}->get_audio();
+        while ( my ( $attribute, $value ) = each %{$audio} ) {
+            print "\t$attribute\t => $value\n";
+        }
+    }
+
+    # kill the bb namespace...
+    $info_obj{tools}->do_killbb();
+
+    # all done!
+    return;
+
+}
+
+# bbinfo start-point...
+init();
+
+__END__
+
+=head1 SYNOPSIS
+
+[-t 1] [options]
+
+Options:
+
+  -h, -?, --help  This help / usage screen...
+  -t, --title     Title number on disc...
+  -i, --input     Input file name...
+  -e, --extended  Extended information...
+
+Example: bbinfo -e
+
+=cut
