@@ -1,0 +1,30 @@
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+mCode x264/faac Video Encoder
+
+=head1 SNYOPSIS
+
+	mcode dvd://1 -o file.mp4 -m "-af volume=10"
+
+=head1 DESCRIPTION
+
+Mutate is a set of video encoding tools written in Perl, and for use with MPlayer and MEncoder.
+
+=head1 BUGS
+
+	http://wiki.github.com/ispyhumanfly/mutate/
+
+=head1 SEE ALSO
+
+	http://github.com/ispyhumanfly/mutate/issues
+
+=head1 LICENSE
+
+This is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=cut
+
