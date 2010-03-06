@@ -4,9 +4,9 @@
 
 =head1 NAME
 
-mCode x264/faac Video Encoder
+MUTATE Video Encoding Tools
 
-=head1 SNYOPSIS
+=head1 SYNOPSIS
 
 	mcode dvd://1 -o file.mp4 -m "-af volume=10"
 
