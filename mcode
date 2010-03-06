@@ -51,7 +51,7 @@ sub init {
             }
 
             when (/^ID_VIDEO_HEIGHT=(\d+)/x) {
-		$obj{identify}->{'height'} = $1;
+				$obj{identify}->{'height'} = $1;
             }
 
             when (/.*crop=(\d+:\d+:\d+:\d+)/x) {
