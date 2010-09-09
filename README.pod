@@ -15,12 +15,12 @@ MUTATE Video Encoding Tools
 Mutate is a set of video encoding tools written in Perl, and for use with MPlayer and MEncoder.
 
 =head1 BUGS
-
-	http://wiki.github.com/ispyhumanfly/mutate/
+	
+	http://github.com/ispyhumanfly/mutate/issues
 
 =head1 SEE ALSO
-
-	http://github.com/ispyhumanfly/mutate/issues
+	
+	http://wiki.github.com/ispyhumanfly/mutate/
 
 =head1 LICENSE
 
