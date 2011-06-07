@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-MUTATE Video Encoding Tools
+MUTATE Media Tools
 
 =head1 SYNOPSIS
 
@@ -12,7 +12,7 @@ MUTATE Video Encoding Tools
 
 =head1 DESCRIPTION
 
-Mutate is a set of video encoding tools written in Perl, and for use with MPlayer and MEncoder.
+Mutate is a set of media tools written in Perl, and for use with MPlayer and MEncoder.
 
 =head1 BUGS
 	
