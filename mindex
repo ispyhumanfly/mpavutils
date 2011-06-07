@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+use 5.010_000;
+use strict;
+use warnings;
+
+use File::Find;
+
+find(\&wanted, @ARGV);
+
+sub wanted {
+
+    say "\n$File::Find::name";
+
+    open my $mplayer,
+
+	"mplayer \"$_\" -ao null -vo null -msglevel " 
+	 . "identify=6 -vf cropdetect -ss 0.1 -endpos 0.01 2> /tmp/mindex.err |";
+
+        for ( grep /^VIDEO|AUDIO/g, <$mplayer> ) {
+
+            when (/^VIDEO: (.*)/x) { say "VIDEO: $1"; }
+            when (/^AUDIO: (.*)/x) { say "AUDIO: $1"; }
+        }
+
+    close $mplayer;
+
+}
