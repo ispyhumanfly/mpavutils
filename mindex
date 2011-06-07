@@ -14,19 +14,21 @@ sub wanted {
 
     open my $mplayer,
 
-	"mplayer \"$_\" -ao null -vo null -msglevel " 
-	 . "identify=6 -vf cropdetect -ss 0.1 -endpos 0.01 2> /tmp/mindex.err |";
+      "mplayer \"$_\" -ao null -vo null -msglevel "
+      . "identify=6 -vf cropdetect -ss 0.1 -endpos 0.01 2> /tmp/mindex.err |";
 
-        for ( grep /VIDEO|AUDIO|Title|Artist|Album|Year|Comment|Track|Genre/g, <$mplayer> ) {
+    for (grep /VIDEO|AUDIO|Title|Artist|Album|Year|Comment|Track|Genre/g,
+        <$mplayer>)
+    {
 
-            when (/VIDEO: (.*)/x) { say "VIDEO: $1"; }
-            when (/AUDIO: (.*)/x) { say "AUDIO: $1"; }
-	    when (/Title: (.*)/x) { say "Title: $1"; }
-	    when (/Artist: (.*)/x) { say "Artist: $1"; }
-	    when (/Album: (.*)/x) { say "Album: $1"; }
-	    when (/Year: (.*)/x) { say "Year: $1"; }
-	    when (/Genre: (.*)/x) { say "Genre: $1"; }
-        }
+        when (/VIDEO: (.*)/x)  { say "VIDEO: $1"; }
+        when (/AUDIO: (.*)/x)  { say "AUDIO: $1"; }
+        when (/Title: (.*)/x)  { say "Title: $1"; }
+        when (/Artist: (.*)/x) { say "Artist: $1"; }
+        when (/Album: (.*)/x)  { say "Album: $1"; }
+        when (/Year: (.*)/x)   { say "Year: $1"; }
+        when (/Genre: (.*)/x)  { say "Genre: $1"; }
+    }
 
     close $mplayer;
 
