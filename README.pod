@@ -4,15 +4,21 @@
 
 =head1 NAME
 
-MUTATE Media Tools
+MUTATE :: The A/V Toolkit for MPlayer
 
 =head1 SYNOPSIS
 
+	Create x264 movies using mcode:
+
 	mcode dvd://1 -o file.mp4 -m "-af volume=10"
+
+	Retrieve information about your media collection using mscan:
+
+	mscan ~/Music ~/Videos
 
 =head1 DESCRIPTION
 
-Mutate is a set of media tools written in Perl, and for use with MPlayer and MEncoder.
+MUTATE is a set of media tools written in Perl, and for use with MPlayer and MEncoder.
 
 =head1 BUGS
 	
