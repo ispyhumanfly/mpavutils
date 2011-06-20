@@ -8,13 +8,13 @@ MUTATE :: The A/V Toolkit for MPlayer
 
 =head1 SYNOPSIS
 
-	Create x264 movies using mcode:
-
-	mcode dvd://1 -o file.mp4 -m "-af volume=10"
-
 	Retrieve information about your media collection using mscan:
 
 	mscan ~/Music ~/Videos
+
+	Create FFmpeg movies using mcode:
+
+	mcode dvd://1 -o file.avi -m "-af volume=10"
 
 =head1 DESCRIPTION
 

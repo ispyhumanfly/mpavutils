@@ -52,13 +52,13 @@ __END__
 
 =head1 SYNOPSIS
 
-</path/to/media> [options]
+</path/to/file/or/directory> [options]
 
 Options:
 
   -h, -?, --help  This help / usage screen...
 
-Example: mscan ~/Music ~/Videos
+Example: mscan ~/Music ~/Music/file.mp3
 
 =cut
 
