@@ -1,14 +1,8 @@
 #!/usr/bin/perl
-# msub (c) 2007 - 2009 MUTATE Video Encoding Tools
 
 use 5.010_000;
-use warnings;
 use strict;
-
-BEGIN { 
-
-    # will eventually check for mplayer/mencoder/gzip/zip on all platforms...
-}
+use warnings;
 
 use IO::Compress::Gzip qw/ gzip $GzipError /;
 use IO::Compress::Zip qw/ zip $ZipError /;
@@ -30,6 +24,6 @@ Options:
   -l, --lang      Video bitrate to use...
   -m, --mplayer   Additional MPlayer options...
 
-Example: mcode dvd://1 -o file.mp4 -m "-af volume=10"
+Example: msub dvd://1 -o file.mp4 -m "-af volume=10"
 
 =cut
