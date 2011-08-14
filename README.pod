@@ -8,6 +8,10 @@ Blackbeard :: A Multi-Pass/Multi-Codec DVD & Blue-Ray Conversion Suite for MPlay
 
 =head1 SYNOPSIS
 
+        Tell your environment where BB is located:
+
+        export BB_HOME=/path/to/blackbeard
+
 	Rip your movie from disk:
 
 	bbrip -o file.vob
