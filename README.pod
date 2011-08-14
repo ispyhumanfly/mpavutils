@@ -23,8 +23,7 @@ Blackbeard :: A Multi-Pass/Multi-Codec DVD & Blue-Ray Conversion Suite for MPlay
 
 =head1 DESCRIPTION
 
-Blackbeard (BB) is a DVD/Blue-Ray conversion suite for MPlayer. BB provides FFmpeg, x264 and Snow video compression options.
-With support for mp2, mp3, ac3 and faac audio audio codecs. 
+Blackbeard (BB) is a DVD/Blue-Ray conversion suite for MPlayer. BB currently provides support for FFmpeg, x264 and Snow video compression. With additional support for mp2, mp3, ac3 and faac audio compression. 
 
 =head1 BUGS
 	
@@ -32,7 +31,7 @@ With support for mp2, mp3, ac3 and faac audio audio codecs.
 
 =head1 SEE ALSO
 	
-	http://wiki.github.com/ispyhumanfly/blacbeard/
+	http://wiki.github.com/ispyhumanfly/blacbeard/wiki
 
 =head1 LICENSE
 
