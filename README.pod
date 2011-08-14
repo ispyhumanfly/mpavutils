@@ -1,0 +1,41 @@
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+Blackbeard :: A Multi-Pass/Multi-Codec DVD & Blue-Ray Conversion Suite for MPlayer
+
+=head1 SYNOPSIS
+
+	Rip your movie from disk:
+
+	bbrip -o file.vob
+
+	Learn important details about your rip:
+
+	bbinfo -e -i file.vob
+
+        Convert your rip into a compressed movie:
+
+        bbencode -i file.vob -o file.avi  
+
+
+=head1 DESCRIPTION
+
+Blackbeard (BB) is a DVD/Blue-Ray conversion suite for MPlayer. BB provides FFmpeg, x264 and Snow video compression options.
+With support for mp2, mp3, ac3 and faac audio audio codecs. 
+
+=head1 BUGS
+	
+	http://github.com/ispyhumanfly/blackbeard/issues
+
+=head1 SEE ALSO
+	
+	http://wiki.github.com/ispyhumanfly/blacbeard/
+
+=head1 LICENSE
+
+This is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=cut
