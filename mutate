@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+
+use local::lib 'lib';
+
+use Modern::Perl;
+
+use Mojolicious::Lite;
+
+# Increase limit to 1TB
+$ENV{MOJO_MAX_MESSAGE_SIZE} = 1073741824000000000000;
+
+any '/upload' => sub {
+    my $self = shift;
+    if (my $example = $self->req->upload('example')) {
+      my $size = $example->size;
+      my $name = $example->filename;
+
+    $example->move_to('movie.in');
+
+      $self->render(text => "Thanks for uploading $size byte file $name.");
+    }
+
+    open my $encode, "mcode movie.in -o out.avi |";
+    close $encode;
+
+};
+
+app->start;
+
+__DATA__
+
+@@ upload.html.ep
+<!doctype html><html>
+    <head><title>Upload</title></head>
+    <body>
+    <%= form_for upload =>
+	    (method => 'post', enctype => 'multipart/form-data') => begin %>
+	<%= file_field 'example' %>
+	<%= submit_button 'Upload' %>
+    <% end %>
+    </body>
+</html>
