@@ -1,18 +1,21 @@
 #!/usr/bin/env perl
 
+use 5.010_000;
+use strict;
+use warnings;
+
 BEGIN {
 
-    system "script/$ARGV[0]"
-      if defined $ARGV[0] and $ARGV[0] =~ /mcode|mscan|msub|minfo|mcalc/x;
+    return if defined $ARGV[0] and $ARGV[0] =~ /daemon/x;
+
+    system "$ENV{MUTATE_HOME}/toolkit/$ARGV[0]"
+      if defined $ARGV[0]
+          and $ARGV[0] =~ /\w+/x;
 
     exit(0)
-      unless defined $ARGV[0]
-          and $ARGV[0] =~ /daemon/x;
 }
 
 use local::lib 'lib';
-
-use Modern::Perl;
 
 use Mojolicious::Lite;
 
@@ -25,12 +28,12 @@ any '/upload' => sub {
         my $size = $example->size;
         my $name = $example->filename;
 
-        $example->move_to('movie.in');
+        $example->move_to('/tmp/video.in');
 
         $self->render(text => "Thanks for uploading $size byte file $name.");
     }
 
-    open my $encode, "mcode movie.in -o out.avi |";
+    open my $encode, "mutate video video.in -o video_out.avi -m '-ss 100 -endpos 30' |";
     close $encode;
 
 };

@@ -8,15 +8,19 @@ MUTATE :: The A/V Toolkit for MPlayer
 
 =head1 SYNOPSIS
 
-	Retrieve information about your media collection using mscan:
+	Tell your environment about MUTATE:
 
-	mutate mscan ~/Music ~/Videos
+	export MUTATE_HOME=/path/to/mutate
 
-	Create FFmpeg movies using mcode:
+	View information about your media using the scanning tool:
 
-	mutate mcode dvd://1 -o file.avi -m "-af volume=10"
+	mutate scan ~/Music ~/Videos
 
-	Distributed encoding via the web gui...
+	Create FFmpeg/MP3 movies using the encoding tool:
+
+	mutate code dvd://1 -o file.avi -m "-af volume=10"
+
+	Do distributed encoding using the web gui:
 
 	mutate daemon
 

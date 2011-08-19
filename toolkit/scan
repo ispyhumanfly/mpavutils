@@ -8,13 +8,11 @@ use Getopt::Long qw/:config no_ignore_case /;
 use Pod::Usage;
 use File::Find;
 
-my $VERSION = '1.0.0';
-
 my %obj;
 
 GetOptions( 'help|?|h' => \$obj{options}->{'help'} );
 
-pod2usage "\nmScan v$VERSION, Media Reader\n"
+pod2usage "\nMUTATE :: Scanner\n"
   if defined $obj{options}->{help}
       or not $ARGV[0];
 
@@ -27,7 +25,7 @@ sub process {
     open my $mplayer,
 
       "mplayer \"$_\" -ao null -vo null -msglevel "
-      . "identify=6 -ss 0.1 -endpos 0.01 2> mscan.err |";
+      . "identify=6 -ss 0.1 -endpos 0.01 2> scan.err |";
 
     for (grep /VIDEO|AUDIO|Title|Artist|Album|Year|Comment|Track|Genre/g,
         <$mplayer>)
@@ -42,7 +40,7 @@ sub process {
         when (/Genre: (.*)/x)  { say "\tGenre: $1"; }
     }
 
-    close $mplayer and unlink 'mscan.err';
+    close $mplayer and unlink 'scan.err';
 
 }
 
@@ -58,7 +56,6 @@ Options:
 
   -h, -?, --help  This help / usage screen...
 
-Example: mscan ~/Music ~/Music/file.mp3
+Example: mutate scan ~/Music ~/Music/file.mp3
 
 =cut
-
