@@ -10,22 +10,28 @@ MUTATE :: The A/V Toolkit for MPlayer
 
 	Retrieve information about your media collection using mscan:
 
-	mscan ~/Music ~/Videos
+	mutate mscan ~/Music ~/Videos
 
 	Create FFmpeg movies using mcode:
 
-	mcode dvd://1 -o file.avi -m "-af volume=10"
+	mutate mcode dvd://1 -o file.avi -m "-af volume=10"
+
+	Distributed encoding via the web gui...
+
+	mutate daemon
 
 =head1 DESCRIPTION
 
 MUTATE is a set of media tools written in Perl, and for use with MPlayer and MEncoder.
+MUTATE also provides a web based graphical interface capable of distributing encoding
+resources across multiple MUTATE instances on your private network or over the internet.
 
 =head1 BUGS
-	
+
 	http://github.com/ispyhumanfly/mutate/issues
 
 =head1 SEE ALSO
-	
+
 	http://wiki.github.com/ispyhumanfly/mutate/
 
 =head1 LICENSE
@@ -33,4 +39,3 @@ MUTATE is a set of media tools written in Perl, and for use with MPlayer and MEn
 This is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 =cut
-

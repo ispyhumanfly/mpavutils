@@ -1,4 +1,14 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+
+BEGIN {
+
+    system "script/$ARGV[0]"
+      if defined $ARGV[0] and $ARGV[0] =~ /mcode|mscan|msub|minfo|mcalc/x;
+
+    exit(0)
+      unless defined $ARGV[0]
+          and $ARGV[0] =~ /daemon/x;
+}
 
 use local::lib 'lib';
 
@@ -12,12 +22,12 @@ $ENV{MOJO_MAX_MESSAGE_SIZE} = 1073741824000000000000;
 any '/upload' => sub {
     my $self = shift;
     if (my $example = $self->req->upload('example')) {
-      my $size = $example->size;
-      my $name = $example->filename;
+        my $size = $example->size;
+        my $name = $example->filename;
 
-    $example->move_to('movie.in');
+        $example->move_to('movie.in');
 
-      $self->render(text => "Thanks for uploading $size byte file $name.");
+        $self->render(text => "Thanks for uploading $size byte file $name.");
     }
 
     open my $encode, "mcode movie.in -o out.avi |";
