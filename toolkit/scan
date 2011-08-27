@@ -12,7 +12,7 @@ my %obj;
 
 GetOptions( 'help|?|h' => \$obj{options}->{'help'} );
 
-pod2usage "\nMUTATE :: Scanner\n"
+pod2usage "\nMUTATE :: Scan Media\n"
   if defined $obj{options}->{help}
       or not $ARGV[0];
 

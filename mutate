@@ -8,33 +8,38 @@ BEGIN {
 
     return if defined $ARGV[0] and $ARGV[0] =~ /daemon/x;
 
-    system "$ENV{MUTATE_HOME}/toolkit/$ARGV[0]"
+    system "$ENV{MUTATE_HOME}/toolkit/@ARGV"
       if defined $ARGV[0]
           and $ARGV[0] =~ /\w+/x;
 
     exit(0)
 }
 
-use local::lib 'lib';
-
 use Mojolicious::Lite;
 
-# Increase limit to 1TB
-$ENV{MOJO_MAX_MESSAGE_SIZE} = 1073741824000000000000;
+$ENV{MOJO_MAX_MESSAGE_SIZE} = 10000000000;
 
 any '/upload' => sub {
+
     my $self = shift;
-    if (my $example = $self->req->upload('example')) {
+    
+	if (my $example = $self->req->upload('example')) 
+	{
         my $size = $example->size;
         my $name = $example->filename;
 
-        $example->move_to('/tmp/video.in');
+        $example->move_to('code.in');
 
         $self->render(text => "Thanks for uploading $size byte file $name.");
-    }
 
-    open my $encode, "mutate video video.in -o video_out.avi -m '-ss 100 -endpos 30' |";
-    close $encode;
+		my $pid=fork();
+		die "Cannot fork: $!" if (! defined $pid);
+		if (! $pid) {
+
+			exec("$ENV{MUTATE_HOME}/toolkit/code code.in -o code.avi");
+			exit();
+		}
+    }
 
 };
 
