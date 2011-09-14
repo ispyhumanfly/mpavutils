@@ -12,7 +12,7 @@ my %obj;
 
 GetOptions( 'help|?|h' => \$obj{options}->{'help'} );
 
-pod2usage "\nMUTATE :: Scheduler\n"
+pod2usage "\nMUTATE :: File Information\n"
   if defined $obj{options}->{help}
       or not $ARGV[0];
 
@@ -26,6 +26,6 @@ Options:
 
   -h, -?, --help  This help / usage screen...
 
-Example: mutate sched "command line"
+Example: minfo "command line"
 
 =cut

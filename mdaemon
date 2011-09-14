@@ -1,0 +1,17 @@
+#!/usr/bin/env perl
+
+use 5.010_000;
+use strict;
+use warnings;
+
+use Getopt::Long qw/:config no_ignore_case /;
+use Pod::Usage;
+
+use Mojolicious::Lite;
+
+any '/' => sub {
+
+    my $self = shift;
+};
+
+app->start;

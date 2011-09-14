@@ -8,27 +8,25 @@ MUTATE :: The A/V Toolkit for MPlayer
 
 =head1 SYNOPSIS
 
-	Tell your environment about MUTATE:
+	View information about your media...
 
-	export MUTATE_HOME=/path/to/mutate
+	mscan ~/Music ~/Videos
 
-	View information about your media using the scanning tool:
+	Create FFmpeg/MP3 movies from disc or file...
 
-	mutate scan ~/Music ~/Videos
+	mcode dvd://1 --output file.avi
 
-	Create FFmpeg/MP3 movies using the encoding tool:
+	Partition your video or audio into multiple files...
 
-	mutate code dvd://1 -o file.avi -m "-af volume=10"
+	msplit file.avi --length 5800.540 --split 2
 
-	Do distributed encoding using the web gui:
+	Group multiple movies into a single file...
 
-	mutate daemon
+	mjoin file1.avi file2.avi --output file.avi
 
 =head1 DESCRIPTION
 
 MUTATE is a set of media tools written in Perl, and for use with MPlayer and MEncoder.
-MUTATE also provides a web based graphical interface capable of distributing encoding
-resources across multiple MUTATE instances on your private network or over the internet.
 
 =head1 BUGS
 

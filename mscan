@@ -56,6 +56,6 @@ Options:
 
   -h, -?, --help  This help / usage screen...
 
-Example: mutate scan ~/Music ~/Music/file.mp3
+Example: mscan ~/Music ~/Music/file.mp3
 
 =cut

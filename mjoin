@@ -23,10 +23,10 @@ pod2usage "\nMUTATE :: Join Files\n"
 open my $mencoder,
 
   "mencoder @ARGV -o \"$obj{options}->{'output'}\" "
-  . "-oac copy -ovc copy 2> join.err |";
+  . "-oac copy -ovc copy 2> mjoin.err |";
 
 print while <$mencoder>;
-unlink 'join.err' and close $mencoder;
+unlink 'mjoin.err' and close $mencoder;
 
 __END__
 
@@ -41,6 +41,6 @@ Options:
   -m, --mencoder  Additional MEncoder options...
 
 
-Example: mutate join file1 file2 file3 -o file.avi
+Example: mjoin file1 file2 file3 -o file.avi
 
 =cut

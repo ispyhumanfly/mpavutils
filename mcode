@@ -36,7 +36,7 @@ sub init {
         open my $mplayer,
 
           "mplayer \"$obj{options}->{input}\" -ao null -vo null -msglevel "
-          . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> code.err |';
+          . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> mcode.err |';
 
         for (grep /^ID|CROP/g, <$mplayer>) {
 
@@ -152,7 +152,7 @@ sub run {
               . ':autoaspect:cmp=256:vqcomp=0.6:mbqmin=2:mbqmax=10:vqdiff=2'
               . ':vqmax=6:mpeg_quant:vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
               . ":scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:turbo:vpass=$multi_pass"
-              . ':vqscale=2 -passlogfile code.pass';
+              . ':vqscale=2 -passlogfile mcode.pass';
 
             $audio_opts = '-nosound';
         }
@@ -165,7 +165,7 @@ sub run {
               . ':autoaspect:cmp=256:vqcomp=0.6:mbqmin=2:mbqmax=10:vqdiff=2'
               . ':vqmax=6:mpeg_quant:vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
               . ":scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:vpass=2"
-              . ":vbitrate=$obj{options}->{vbit} -passlogfile code.pass";
+              . ":vbitrate=$obj{options}->{vbit} -passlogfile mcode.pass";
 
             $audio_opts =
               "-oac mp3lame -lameopts abr:br=$obj{options}->{abit}";
@@ -175,12 +175,12 @@ sub run {
 
           "mencoder \"$obj{options}->{input}\" -o \"$obj{options}->{output}\" "
           . "-vf pullup,softskip,crop=$obj{identify}->{crop},scale=$obj{options}->{scale},harddup"
-          . " $obj{options}->{mencoder} $video_opts $audio_opts 2> code.err |";
+          . " $obj{options}->{mencoder} $video_opts $audio_opts 2> mcode.err |";
 
         print while <$mencoder>;
         close $mencoder;
     }
-    unlink 'code.err', 'code.pass' and exit(0);
+    unlink 'mcode.err', 'mcode.pass' and exit(0);
 
 }
 
@@ -203,6 +203,6 @@ Options:
   -t, --threads   How many threads to use...
   -m, --mencoder  Additional MEncoder options...
 
-Example: mutate encode dvd://1 -o file.avi -m \"-af volume=10\"
+Example: mcode dvd://1 -o file.avi -m "-af volume=10"
 
 =cut
