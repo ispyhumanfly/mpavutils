@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+use 5.010_000;
+use strict;
+use warnings;
+
+use Getopt::Long qw/:config no_ignore_case /;
+use Pod::Usage;
+use File::Find;
+
+my %obj;
+
+GetOptions( 'help|?|h' => \$obj{options}->{'help'} );
+
+pod2usage "\nMUTATE :: Scan Media\n"
+  if defined $obj{options}->{help}
+      or not $ARGV[0];
+
+find(\&process, @ARGV);
+
+sub process {
+
+    say "\nReading $File::Find::name";
+
+    open my $mplayer,
+
+      "mplayer \"$_\" -ao null -vo null -msglevel "
+      . "identify=6 -ss 0.1 -endpos 0.01 2> scan.err |";
+
+    for (grep /VIDEO|AUDIO|Title|Artist|Album|Year|Comment|Track|Genre/g,
+        <$mplayer>)
+    {
+
+        when (/VIDEO: (.*)/x)  { say "\tVideo: $1"; }
+        when (/AUDIO: (.*)/x)  { say "\tAudio: $1"; }
+        when (/Title: (.*)/x)  { say "\tTitle: $1"; }
+        when (/Artist: (.*)/x) { say "\tArtist: $1"; }
+        when (/Album: (.*)/x)  { say "\tAlbum: $1"; }
+        when (/Year: (.*)/x)   { say "\tYear: $1"; }
+        when (/Genre: (.*)/x)  { say "\tGenre: $1"; }
+    }
+
+    close $mplayer and unlink 'scan.err';
+
+}
+
+exit(0);
+
+__END__
+
+=head1 SYNOPSIS
+
+</path/to/file/or/directory> [options]
+
+Options:
+
+  -h, -?, --help  This help / usage screen...
+
+Example: mscan ~/Music ~/Music/file.mp3
+
+=cut
