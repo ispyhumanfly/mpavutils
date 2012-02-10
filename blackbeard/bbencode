@@ -1,0 +1,508 @@
+#!/usr/bin/perl
+# bbencode (c) 2007-2008 nemesis, l.l.c.
+
+use warnings;
+use strict;
+
+BEGIN {
+
+    # NEMESIS_HOME was defined...
+    if ( ( exists $ENV{NEMESIS_HOME} ) and ( -d $ENV{NEMESIS_HOME} . '/bb' ) ) {
+        push @INC, $ENV{NEMESIS_HOME} . '/bb/lib';
+
+        # the bb namespace required environment variable...
+        $ENV{WE_LIKE_MOVIES} = $ENV{NEMESIS_HOME} . '/bb';
+    }
+
+    # BB_HOME was defined and overrides NEMESIS_HOME
+    elsif ( ( exists $ENV{BB_HOME} ) and ( -d $ENV{BB_HOME} ) ) {
+        push @INC, $ENV{BB_HOME} . '/lib';
+
+        # the bb namespace required environment variable...
+        $ENV{WE_LIKE_MOVIES} = $ENV{BB_HOME};
+    }
+    else {
+        die "ERROR: You must set BB_HOME to the path of Blackbeard in your environment.\n";
+
+    }
+}
+
+use Getopt::Long;
+use Pod::Usage;
+use Cwd qw/ realpath /;
+use File::Copy;
+use POSIX;
+
+# load the bb namespace...
+use BB;
+
+# subroutine used for initial configuration...
+sub init {
+
+    # preamble...
+    my %encode_obj;
+
+    # objects / data-structures for bbencode...
+    $encode_obj{options} = new Getopt::Long::Parser( config => ['no_ignore_case'] );
+    $encode_obj{tools} = {};
+
+    # welcome message for help / usage information...
+    my $welcome = "\nbbencode (c) 2007-2008 nemesis, l.l.c.\n";
+
+    # if no arguments have been passed, forward to help / usage pod...
+    pod2usage($welcome) unless $ARGV[0];
+
+    # command line options...
+    $encode_obj{options}->getoptions(
+        'input|i=s'   => \$encode_obj{options}->{input},
+        'title|t=i'   => \$encode_obj{options}->{title},
+        'output|o=s'  => \$encode_obj{options}->{output},
+        'size|s=i'    => \$encode_obj{options}->{size},
+        'lang|l=i'    => \$encode_obj{options}->{lang},
+        'vol|v=i'     => \$encode_obj{options}->{vol},
+        'sub|S=i'     => \$encode_obj{options}->{sub},
+        'acodec|ac=s' => \$encode_obj{options}->{acodec},
+        'vcodec|vc=s' => \$encode_obj{options}->{vcodec},
+        'abit|ab=i'   => \$encode_obj{options}->{abit},
+        'vbit|vb=i'   => \$encode_obj{options}->{vbit},
+        'scale|x=s'   => \$encode_obj{options}->{scale},
+        'aspect|a=s'  => \$encode_obj{options}->{aspect},
+        'chans|C=i'   => \$encode_obj{options}->{chans},
+        'pass|p=i'    => \$encode_obj{options}->{pass},
+        'clip|c=i'    => \$encode_obj{options}->{clip},
+        'fps|f=i'     => \$encode_obj{options}->{fps},
+        'threads|T=i' => \$encode_obj{options}->{threads},
+        'help|?|h'    => \$encode_obj{options}->{help},
+    );
+
+    # caveats...
+    if ( ( defined $encode_obj{options}->{size} ) and ( defined $encode_obj{options}->{vbit} ) ) {
+        die "The --size and --vbit options cannot be used together.\n";
+    }
+    if ( ( defined $encode_obj{options}->{title} ) and ( defined $encode_obj{options}->{input} ) ) {
+        die "The --input and --title options cannot be used together.\n";
+    }
+
+    # --help option...
+    pod2usage($welcome) if defined $encode_obj{options}->{help};
+
+    # --output option...
+    unless (( defined $encode_obj{options}->{output} )
+        and ( $encode_obj{options}->{output} =~ /\.avi$/x ) )
+    {
+        die "You must specify a valid output file using --output\n";
+    }
+
+    # --title option...
+    if ( defined $encode_obj{options}->{title} ) {
+
+        # a brief message...
+        print "Gathering information from title $encode_obj{options}->{title}...\n";
+
+        # extract dvd information...
+        $encode_obj{tools} = new BB(
+            input => 'dvd://' . $encode_obj{options}->{title},
+            type  => 'mplayer',
+            debug => 1,
+        );
+
+        # fully qualified input name...
+        $encode_obj{options}->{input} = 'dvd://' . $encode_obj{options}->{title};
+    }
+
+    # --input option...
+    elsif ( ( defined $encode_obj{options}->{input} )
+        and ( $encode_obj{options}->{input} =~ /\.vob$/x ) )
+    {
+        # get the absolute path to this input file...
+        $encode_obj{options}->{input} = realpath( $encode_obj{options}->{input} );
+
+        # a brief message...
+        print "Gathering information from file $encode_obj{options}->{input}...\n";
+
+        # provided there is a '.rip' file associated with the source input...
+        if ( -e $encode_obj{options}->{input} . '.rip' ) {
+            $encode_obj{tools} = new BB(
+                input => $encode_obj{options}->{input} . '.rip',
+                type  => 'file',
+                debug => 1,
+            );
+        }
+        else {
+            die "There is NO '.rip' file associated with the input specified.\n";
+        }
+    }
+
+    # no --title and no --input option...
+    elsif ( not defined $encode_obj{options}->{input} ) {
+
+        # a brief message...
+        print "Gathering information from disc...\n";
+
+        # extract dvd information...
+        $encode_obj{tools} = new BB(
+            input => 'dvd://1',
+            type  => 'mplayer',
+            debug => 0,
+        );
+
+        # determine the obvious movie title...
+        my $title = $encode_obj{tools}->do_calc( longest_title => 1 );
+        $encode_obj{options}->{input} = 'dvd://' . $title;
+
+        # a brief message...
+        print "Gathering information from title $title...\n";
+
+        # kill the bb namespace and try again...
+        $encode_obj{tools}->do_killbb();
+
+        # extract dvd information once more...
+        $encode_obj{tools} = new BB(
+            input => $encode_obj{options}->{input},
+            type  => 'mplayer',
+            debug => 1,
+        );
+    }
+    else {
+        die "Either no disc could be read or the input/title you specified is invalid!\n";
+    }
+
+    # --lang option...
+    if ( defined $encode_obj{options}->{lang} ) {
+
+        # just see if the requested track is even available...
+        my @lang_list = sort {
+            abs( $a - $encode_obj{options}->{lang} ) <=> ( $b - $encode_obj{options}->{lang} )
+        } @{ $encode_obj{tools}->get_audio( tracks => 1 ) };
+
+        # we need a match...
+        unless ( $encode_obj{options}->{lang} == $lang_list[0] ) {
+            die "Invalid --lang value: $encode_obj{options}->{lang} is not a valid audio track!\n";
+        }
+    }
+    else {
+        $encode_obj{options}->{lang} = int $encode_obj{tools}->get_audio( tracks => 1 )->[0];
+    }
+
+    # --vol option...
+    if ( defined $encode_obj{options}->{vol} ) {
+
+        # from no volume to highest...
+        unless ( $encode_obj{options}->{vol} <= 10 ) {
+            die "Invalid --vol value: $encode_obj{options}->{vol} is not a valid volume level!\n";
+        }
+    }
+    else {
+        $encode_obj{options}->{vol} = 8;
+    }
+
+    # --clip option...
+    if ( defined $encode_obj{options}->{clip} ) {
+
+        # snag the audio information on this file...
+        my $audio = $encode_obj{tools}->get_audio();
+
+        # if the minute requested exceeds the source audio length in minutes...
+        if ( $encode_obj{options}->{clip} >= floor( $audio->{length} / 60 ) ) {
+            die "Invalid --clip value: $encode_obj{options}->{clip} minutes exceeds source length!\n";
+        }
+    }
+
+    # --acodec option...
+    if ( defined $encode_obj{options}->{acodec} ) {
+
+        # provided they requested a supported codec...
+        unless ( $encode_obj{options}->{acodec} =~ /(mp2|mp3|ac3|faac)/x ) {
+            die "Invalid --acodec value: $encode_obj{options}->{acodec} is not a supported codec!\n";
+        }
+    }
+    else {
+        $encode_obj{options}->{acodec} = 'mp3';
+    }
+
+    # --vcodec option...
+    if ( defined $encode_obj{options}->{vcodec} ) {
+
+        # provided they requested a supported codec...
+        unless ( $encode_obj{options}->{vcodec} =~ /(ffmpeg|x264|snow)/x ) {
+            die "Invalid --vcodec value: $encode_obj{options}->{vcodec} is not a supported codec!\n";
+        }
+    }
+    else {
+        $encode_obj{options}->{vcodec} = 'ffmpeg';
+    }
+
+    # --abit option...
+    if ( defined $encode_obj{options}->{abit} ) {
+
+        # this needs to be a reasonable bitrate...
+        unless ( $encode_obj{options}->{abit} < 512 ) {
+            die "Invalid --abit value: $encode_obj{options}->{abit} is not a valid value!\n";
+        }
+    }
+    else {
+        $encode_obj{options}->{abit} = 128;
+    }
+
+    # --size option...
+    if ( defined $encode_obj{options}->{size} ) {
+
+        # let's determine a suitable video bitrate...
+        $encode_obj{options}->{vbit} =
+            $encode_obj{tools}->do_calc(
+            video_bitrate => [ $encode_obj{options}->{size}, $encode_obj{options}->{abit} ] );
+    }
+
+    # --vbit option...
+    elsif ( not defined $encode_obj{options}->{vbit} ) {
+
+        # snag some video information...
+        my $video = $encode_obj{tools}->get_video();
+
+        # let's determine a suitable video bitrate...
+        $encode_obj{options}->{vbit} =
+            $encode_obj{tools}->do_calc(
+            video_bitrate => [ ceil( $video->{length} / 7 ), $encode_obj{options}->{abit} ] );
+    }
+
+    # --chans option...
+    if ( defined $encode_obj{options}->{chans} ) {
+
+        # provided everything is within range...
+        unless ( $encode_obj{options}->{chans} =~ /[1-8]/x ) {
+            die "Invalid --chans value: $encode_obj{options}->{chans} is not a valid value!\n";
+        }
+    }
+    else {
+        $encode_obj{options}->{chans} = 2;
+    }
+
+    # --fps option...
+    if ( defined $encode_obj{options}->{fps} ) {
+
+        # this seems like a good number...
+        unless ( $encode_obj{options}->{fps} <= 60 ) {
+            die "Invalid --fps value: $encode_obj{options}->{fps} is not a valid value!\n";
+        }
+
+        # round up for encoding...
+        ceil $encode_obj{options}->{fps};
+    }
+    else {
+        $encode_obj{options}->{fps} = 25;
+    }
+
+    # --scale option...
+    if ( defined $encode_obj{options}->{scale} ) {
+
+        # make sure the scale was given in the correct format...
+        unless ( $encode_obj{options}->{scale} =~ /([0-9].*):([0-9].*)/x ) {
+            die "Invalid --scale value: incorrect or invalid scale syntax!\n";
+        }
+    }
+    else {
+        
+        # now determine the optimum scale based on the best bpp...
+        $encode_obj{options}->{scale} =
+            $encode_obj{tools}->do_calc(
+            video_scale => [ $encode_obj{options}->{vbit}, 0.220, $encode_obj{options}->{fps} ]
+        );
+    }
+
+    # --aspect option...
+    if ( defined $encode_obj{options}->{aspect} ) {
+
+        # make sure the aspect was given in the correct format...
+        unless ( $encode_obj{options}->{aspect} =~ /([0-9].*):([0-9].*)/x ) {
+            die "Invalid --aspect value: incorrect or invalid scale syntax!\n";
+        }
+    }
+    else {
+
+        # snag some video information...
+        my $video = $encode_obj{tools}->get_video();
+        $encode_obj{options}->{aspect} = $video->{aspect};
+    }
+
+    # --pass option...
+    if ( defined $encode_obj{options}->{pass} ) {
+
+        # as long as at least 1 passes were requested...
+        unless ( $encode_obj{options}->{pass} >= 1 ) {
+            die "Invalid --pass value: $encode_obj{options}->{pass} is not a valid value!\n";
+        }
+    }
+    else {
+        $encode_obj{options}->{pass} = 2;
+    }
+
+    # --threads option...
+    if (    ( defined $encode_obj{options}->{threads} )
+        and ( $encode_obj{options}->{threads} >= 1 ) )
+    {
+        # ffmpeg...
+        if ( $encode_obj{options}->{vcodec} eq 'ffmpeg' ) {
+
+            # valid thread count for this codec is: 1-8...
+            die "Invalid thread count for use with ffmpeg!\n"
+                unless $encode_obj{options}->{threads} <= 8;
+        }
+
+        # x264...
+        if ( $encode_obj{options}->{vcodec} eq 'x264' ) {
+
+            # valid thread count for this codec is: 1-16...
+            die "Invalid thread count for use with x264!\n"
+                unless $encode_obj{options}->{threads} <= 16;
+        }
+
+        # snow...
+        if ( $encode_obj{options}->{vcodec} eq 'snow' ) {
+
+            # valid thread count for this codec is: 1-8...
+            die "Invalid thread count for use with snow!\n"
+                unless $encode_obj{options}->{threads} <= 8;
+        }
+    }
+    else {
+        $encode_obj{options}->{threads} = 1;
+    }
+
+    # ok, let's get things started...
+    run(%encode_obj);
+
+}
+
+# subroutine that makes this program useful...
+sub run {
+
+    # preamble...
+    my %encode_obj = @_;
+
+    # mplayer detected video and audio containers...
+    my $video = $encode_obj{tools}->get_video();
+    my $audio = $encode_obj{tools}->get_audio();
+
+    # perform a single or multi-pass video encode...
+    for ( my $pass = 1; $pass <= $encode_obj{options}->{pass}; $pass++ ) {
+
+        # a brief message...
+        print "Please be patient, pass $pass in progress...\n";
+
+        # mencoder command line...
+        open my $cmd_encode,
+
+            # initial options...
+            "$encode_obj{tools}->{mencoder} \"$encode_obj{options}->{input}\" "
+
+            # video codec and related options...
+            . $encode_obj{tools}->do_vcodec(
+            codec   => $encode_obj{options}->{vcodec},
+            bitrate => $encode_obj{options}->{vbit},
+            threads => $encode_obj{options}->{threads},
+            pass    => $pass,
+            final   => $encode_obj{options}->{pass},
+            )
+            . ' '
+
+            # audio codec and related options...
+            . $encode_obj{tools}->do_acodec(
+            codec   => $encode_obj{options}->{acodec},
+            bitrate => $encode_obj{options}->{abit},
+            lang    => $encode_obj{options}->{lang},
+            chans   => $encode_obj{options}->{chans},
+            vol     => $encode_obj{options}->{vol},
+            pass    => $pass,
+            final   => $encode_obj{options}->{pass},
+            )
+            .
+
+            # video scaling, cropping and aspect options...
+            " -vf pullup,softskip,crop="
+            . $encode_obj{tools}->get_video( autocrop => 1 )
+            . ",scale=$encode_obj{options}->{scale},harddup -aspect $encode_obj{options}->{aspect} "
+            . (
+
+            # subtitles...
+            defined $encode_obj{options}->{sub}
+                and $pass == 1
+                and !$encode_obj{options}->{clip}
+            ? "-vobsubout tmp/encode_project -vobsuboutindex 0 -sid $encode_obj{options}->{sub}"
+            : ''
+            )
+            .
+
+            # test clip...
+            (
+            $encode_obj{options}->{clip}
+            ? " -ss $encode_obj{options}->{clip}:00 -endpos 0:30 "
+            : ' '
+            )
+            .
+
+            # output...
+            "-ofps $encode_obj{options}->{fps}000/1001 -o tmp/encode_project.avi 2> tmp/encode_trash |"
+            or die "Unable to open command: $!\n";
+
+        # show the output then close the file handle...
+        print $_ while <$cmd_encode>;
+        close $cmd_encode;
+    }
+
+    # kill the bb namespace...
+    $encode_obj{tools}->do_killbb();
+
+    # send the newly created video file to the users working directory...
+    move "$ENV{WE_LIKE_MOVIES}/tmp/encode_project.avi", "$encode_obj{options}->{output}";
+
+    # send the newly created sub/idx files to the working directory if enabled...
+    if (    ( defined $encode_obj{options}->{sub} )
+        and ( not defined $encode_obj{options}->{clip} ) )
+    {
+        # rename to sub and move...
+        $encode_obj{options}->{output} =~ s/\.avi/\.sub/x;
+        move "$ENV{WE_LIKE_MOVIES}/tmp/encode_project.sub", "$encode_obj{options}->{output}";
+
+        # rename to idx and move...
+        $encode_obj{options}->{output} =~ s/\.sub/\.idx/x;
+        move "$ENV{WE_LIKE_MOVIES}/tmp/encode_project.idx", "$encode_obj{options}->{output}";
+    }
+
+    # all done!
+    return;
+
+}
+
+# encode start-point...
+init();
+
+__END__
+
+=head1 SYNOPSIS
+
+[-t 1] <-o file.avi> [options]
+
+Options:
+
+  -h, -?, --help  This help / usage screen...
+  -t, --title     Title number on disc...
+  -i, --input     Input file name...
+  -o, --output    Output file name...
+  -s, --size      Size of output in megabytes...
+  -l, --lang      Language track id...
+  -C, --chans     Number of audio channels to use...
+  -v, --vol       Volume level to use...
+  -S, --sub       Subtitle track id...
+  -ac, --acodec   Audio codec: mp2,mp3,ac3,faac
+  -vc, --vcodec   Video codec: ffmpeg,x264,snow
+  -ab, --abit     Audio bitrate to use...
+  -vb, --vbit     Video bitrate to use...
+  -f, --fps       FPS to encode with...
+  -x, --scale     Video scale to use...
+  -p, --pass      Number of passes to use...
+  -T, --threads   How many threads to use...
+  -c, --clip      Make a 30 second clip of the encode...
+
+Example: bbencode -o file.avi -c 5 -f 25 -T 4
+
+=cut
