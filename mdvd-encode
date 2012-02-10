@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# bbencode (c) 2007-2008 nemesis, l.l.c.
+# mdvd-encode (c) 2007-2008 nemesis, l.l.c.
 
 use warnings;
 use strict;
@@ -42,12 +42,12 @@ sub init {
     # preamble...
     my %encode_obj;
 
-    # objects / data-structures for bbencode...
+    # objects / data-structures for mdvd-encode...
     $encode_obj{options} = new Getopt::Long::Parser( config => ['no_ignore_case'] );
     $encode_obj{tools} = {};
 
     # welcome message for help / usage information...
-    my $welcome = "\nbbencode (c) 2007-2008 nemesis, l.l.c.\n";
+    my $welcome = "\nmdvd-encode, DVD Encoder\n";
 
     # if no arguments have been passed, forward to help / usage pod...
     pod2usage($welcome) unless $ARGV[0];
@@ -503,6 +503,6 @@ Options:
   -T, --threads   How many threads to use...
   -c, --clip      Make a 30 second clip of the encode...
 
-Example: bbencode -o file.avi -c 5 -f 25 -T 4
+Example: mdvd-encode -o file.avi -c 5 -f 25 -T 4
 
 =cut

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# bbrip (c) 2007-2008 nemesis, l.l.c.
+# mdvd-rip (c) 2007-2008 nemesis, l.l.c.
 
 use warnings;
 use strict;
@@ -42,12 +42,12 @@ sub init {
     # preamble...
     my %rip_obj;
 
-    # objects / data-structures for bbrip...
+    # objects / data-structures for mdvd-rip...
     $rip_obj{options} = new Getopt::Long::Parser( config => ['no_ignore_case'] );
     $rip_obj{tools} = {};
 
     # welcome message for help / usage information...
-    my $welcome = "\nbbrip (c) 2007-2008 nemesis, l.l.c.\n";
+    my $welcome = "\nmdvd-rip, DVD Ripper";
 
     # if no arguments have been passed, forward to help / usage pod...
     pod2usage($welcome) unless $ARGV[0];
@@ -189,7 +189,7 @@ sub run {
 
 }
 
-# bbrip start-point...
+# mdvd-rip start-point...
 init();
 
 __END__
@@ -206,6 +206,6 @@ Options:
   -c, --chapter   Chapters to use...
   -a, --angle     Angle to use...
 
-Example: bbrip -o file.vob
+Example: mdvd-rip -o file.vob
 
 =cut

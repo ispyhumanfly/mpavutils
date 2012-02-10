@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# bbinfo (c) 2007-2008 nemesis, l.l.c.
+# mdvd-info (c) 2007-2008 nemesis, l.l.c.
 
 use warnings;
 use strict;
@@ -41,12 +41,12 @@ sub init {
     # preamble...
     my %info_obj;
 
-    # objects / data-structures for bbinfo...
+    # objects / data-structures for mdvd-info...
     $info_obj{options} = new Getopt::Long::Parser( config => ['no_ignore_case'] );
     $info_obj{tools}   = {};
 
     # welcome message for help / usage information...
-    my $welcome = "\nbbinfo (c) 2007-2008 nemesis, l.l.c.\n";
+    my $welcome = "\nmdvd-info, DVD Info\n";
 
     # command line options...
     $info_obj{options}->getoptions(
@@ -209,7 +209,7 @@ sub run {
 
 }
 
-# bbinfo start-point...
+# mdvd-info start-point...
 init();
 
 __END__
@@ -225,6 +225,6 @@ Options:
   -i, --input     Input file name...
   -e, --extended  Extended information...
 
-Example: bbinfo -e
+Example: mdvd-info -e
 
 =cut

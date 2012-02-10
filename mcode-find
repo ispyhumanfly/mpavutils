@@ -12,7 +12,7 @@ my %obj;
 
 GetOptions( 'help|?|h' => \$obj{options}->{'help'} );
 
-pod2usage "\nMUTATE :: Scan Media\n"
+pod2usage "\nmcode-info :: Read Media\n"
   if defined $obj{options}->{help}
       or not $ARGV[0];
 
@@ -25,7 +25,7 @@ sub process {
     open my $mplayer,
 
       "mplayer \"$_\" -ao null -vo null -msglevel "
-      . "identify=6 -ss 0.1 -endpos 0.01 2> scan.err |";
+      . "identify=6 -ss 0.1 -endpos 0.01 2> mcode-info.err |";
 
     for (grep /VIDEO|AUDIO|Title|Artist|Album|Year|Comment|Track|Genre/g,
         <$mplayer>)
@@ -40,7 +40,7 @@ sub process {
         when (/Genre: (.*)/x)  { say "\tGenre: $1"; }
     }
 
-    close $mplayer and unlink 'scan.err';
+    close $mplayer and unlink 'mcode-info.err';
 
 }
 

@@ -1,0 +1,208 @@
+#!/usr/bin/perl
+
+use 5.010_000;
+use strict;
+use warnings;
+
+use Getopt::Long qw/:config no_ignore_case /;
+use Pod::Usage;
+use Cwd qw/ realpath /;
+
+sub init {
+
+    my %obj;
+
+    GetOptions(
+
+        'output|o=s'   => \$obj{options}->{'output'},
+        'vbit|v=i'     => \$obj{options}->{'vbit'},
+        'abit|a=i'     => \$obj{options}->{'abit'},
+        'scale|x=s'    => \$obj{options}->{'scale'},
+        'pass|p=i'     => \$obj{options}->{'pass'},
+        'threads|t=i'  => \$obj{options}->{'threads'},
+        'mencoder|m=s' => \$obj{options}->{'mencoder'},
+        'help|?|h'     => \$obj{options}->{'help'},
+    );
+
+    pod2usage "\nmcode-ffmpeg, FFmpeg/MP3 Encoder\n"
+      if defined $obj{options}->{help}
+          or not $ARGV[0];
+
+    if ("@ARGV" =~ /^\w+:\/\/\d+|\w+$/g) {
+
+        eval { $obj{options}->{'input'} = realpath("@ARGV") };
+        $obj{options}->{'input'} = "@ARGV" if $@;
+
+        open my $mplayer,
+
+          "mplayer \"$obj{options}->{input}\" -ao null -vo null -msglevel "
+          . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> mcode-ffmpeg.err |';
+
+        for (grep /^ID|CROP/g, <$mplayer>) {
+
+            when (/^ID_VIDEO_WIDTH=(\d+)/x) {
+                $obj{identify}->{'width'} = $1;
+            }
+
+            when (/^ID_VIDEO_HEIGHT=(\d+)/x) {
+                $obj{identify}->{'height'} = $1;
+            }
+
+            when (/.*crop=(\d+:\d+:\d+:\d+)/x) {
+                $obj{identify}->{'crop'} = $1;
+            }
+        }
+        close $mplayer;
+    }
+    else {
+
+        say 'An MPlayer compatible File/Device must be clearly defined.'
+          and exit(1);
+    }
+
+    unless ((defined $obj{options}->{output})
+        and ($obj{options}->{output} =~ /\.avi$/x))
+    {
+        say 'Option o must be defined and have a .avi extension.' and exit(1);
+    }
+
+    for (keys %{$obj{options}}) {
+
+        when ('vbit') {
+
+            unless ((defined $obj{options}->{vbit})
+                and ($obj{options}->{vbit} > 0))
+            {
+                $obj{options}->{vbit} = 1200;
+            }
+        }
+
+        when ('abit') {
+
+            unless ((defined $obj{options}->{abit})
+                and ($obj{options}->{abit} > 0))
+            {
+                $obj{options}->{abit} = 128;
+            }
+        }
+
+        when ('scale') {
+
+            unless ((defined $obj{options}->{scale})
+                and ($obj{options}->{scale} =~ /\d+:\d+/x))
+            {
+                $obj{options}->{scale} =
+                  "$obj{identify}->{width}:$obj{identify}->{height}";
+            }
+        }
+
+        when ('pass') {
+
+            unless ((defined $obj{options}->{pass})
+                and ($obj{options}->{pass} >= 1))
+            {
+                $obj{options}->{pass} = 2;
+            }
+        }
+
+        when ('threads') {
+
+            unless ((defined $obj{options}->{threads})
+                and ($obj{options}->{threads} <= 16))
+            {
+                $obj{options}->{threads} = 1;
+            }
+        }
+    }
+    goto(run(%obj));
+
+}
+
+sub run {
+
+    my %obj = @_;
+
+    for (my $pass = 1; $pass <= $obj{options}->{pass}; $pass++) {
+
+        my ($video_opts, $audio_opts, $multi_pass);
+
+        if (($pass == 1) and ($obj{options}->{pass} == 1)) {
+
+            $video_opts =
+                "-of avi -ovc lavc -lavcopts threads=$obj{options}->{threads}"
+              . ':vcodec=mpeg4:vstrict=-1:mbd=2:trell:v4mv:vmax_b_frames=2:autoaspect'
+              . ':cmp=256:vqcomp=0.6:vqdiff=2:vqmax=6:mpeg_quant'
+              . ':vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
+              . ":scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:vbitrate=$obj{options}->{vbit}";
+
+            $audio_opts =
+              "-oac mp3lame -lameopts abr:br=$obj{options}->{abit}";
+        }
+
+        elsif ( ($pass >= 1)
+            and ($pass != $obj{options}->{pass}))
+        {
+
+            $multi_pass = 1 if $pass == 1;
+            $multi_pass = 3 if $pass >= 2;
+
+            $video_opts =
+                "-of avi -ovc lavc -lavcopts threads=$obj{options}->{threads}"
+              . ':vcodec=mpeg4:vstrict=-1:mbd=2:trell:v4mv:vmax_b_frames=2'
+              . ':autoaspect:cmp=256:vqcomp=0.6:vqdiff=2'
+              . ':vqmax=6:mpeg_quant:vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
+              . ":scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:turbo:vpass=$multi_pass"
+              . ':vqscale=2 -passlogfile mcode-ffmpeg.pass';
+
+            $audio_opts = '-nosound';
+        }
+
+        elsif ($pass == $obj{options}->{pass}) {
+
+            $video_opts =
+                "-of avi -ovc lavc -lavcopts threads=$obj{options}->{threads}"
+              . ':vcodec=mpeg4:vstrict=-1:mbd=2:trell:v4mv:vmax_b_frames=2'
+              . ':autoaspect:cmp=256:vqcomp=0.6:vqdiff=2'
+              . ':vqmax=6:mpeg_quant:vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
+              . ":scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:vpass=2"
+              . ":vbitrate=$obj{options}->{vbit} -passlogfile mcode-ffmpeg.pass";
+
+            $audio_opts =
+              "-oac mp3lame -lameopts abr:br=$obj{options}->{abit}";
+        }
+
+        open my $mencoder,
+
+          "mencoder \"$obj{options}->{input}\" -o \"$obj{options}->{output}\" "
+          . "-vf pullup,softskip,crop=$obj{identify}->{crop},scale=$obj{options}->{scale},harddup"
+          . " $obj{options}->{mencoder} $video_opts $audio_opts 2> mcode-ffmpeg.err |";
+
+        print while <$mencoder>;
+        close $mencoder;
+    }
+    unlink 'mcode-ffmpeg.err', 'mcode-ffmpeg.pass' and exit(0);
+
+}
+
+init();
+
+__END__
+
+=head1 SYNOPSIS
+
+<file/device> <-o file.avi> [options]
+
+Options:
+
+  -h, -?, --help  This help / usage screen...
+  -o, --output    Output file name...
+  -v, --vbit      Video bitrate to use...
+  -a, --abit      Audio bitrate to use...
+  -x, --scale     Video scale to use...
+  -p, --pass      Number of passes to use...
+  -t, --threads   How many threads to use...
+  -m, --mencoder  Additional MEncoder options...
+
+Example: mcode-ffmpeg dvd://1 -o file.avi -m "-af volume=10"
+
+=cut

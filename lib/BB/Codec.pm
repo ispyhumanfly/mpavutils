@@ -22,7 +22,7 @@ sub do_vcodec {
                   '-of avi -ovc lavc -lavcopts threads='
                 . $arguments{threads}
                 . ':vcodec=mpeg4:vstrict=-1:mbd=2:trell:v4mv'
-                . ':vmax_b_frames=2:autoaspect:cmp=256:vqcomp=0.6:mbqmin=2:mbqmax=10:vqdiff=2'
+                . ':vmax_b_frames=2:autoaspect:cmp=256:vqcomp=0.6:vqdiff=2'
                 . ':vqmax=6:mpeg_quant:vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
                 . ':scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:vbitrate='
                 . $arguments{bitrate};
@@ -43,7 +43,7 @@ sub do_vcodec {
                   '-of avi -ovc lavc -lavcopts threads='
                 . $arguments{threads}
                 . ':vcodec=mpeg4:vstrict=-1:mbd=2:trell:v4mv'
-                . ':vmax_b_frames=2:autoaspect:cmp=256:vqcomp=0.6:mbqmin=2:mbqmax=10:vqdiff=2'
+                . ':vmax_b_frames=2:autoaspect:cmp=256:vqcomp=0.6:vqdiff=2'
                 . ':vqmax=6:mpeg_quant:vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
                 . ':scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:turbo:vpass='
                 . $arguments{pass}
@@ -64,7 +64,7 @@ sub do_vcodec {
                   '-of avi -ovc lavc -lavcopts threads='
                 . $arguments{threads}
                 . ':vcodec=mpeg4:vstrict=-1:mbd=2:trell:v4mv'
-                . ':vmax_b_frames=2:autoaspect:cmp=256:vqcomp=0.6:mbqmin=2:mbqmax=10:vqdiff=2'
+                . ':vmax_b_frames=2:autoaspect:cmp=256:vqcomp=0.6:vqdiff=2'
                 . ':vqmax=6:mpeg_quant:vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
                 . ':scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:vpass='
                 . $arguments{pass}
