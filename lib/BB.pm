@@ -86,7 +86,7 @@ sub new {
         # mplayer command line...
         open my $cmd_line,
           "$params{mplayer} $params{input} -ao null -vo null -msglevel "
-          . 'identify=6 -ss 100 -endpos 0:05 -vf cropdetect 2> tmp/bb_trash |'
+          . 'identify=6 -ss 100 -endpos 0:05 -vf cropdetect 2> /tmp/bb.trash |'
           or die "Unable to open command: $!\n";
 
         while (my $line = <$cmd_line>) {
