@@ -25,7 +25,7 @@ sub process {
     open my $mplayer,
 
       "mplayer \"$_\" -ao null -vo null -msglevel "
-      . "identify=6 -ss 0.1 -endpos 0.01 2> mcode-info.err |";
+      . "identify=6 -ss 0.1 -endpos 0.01 2> mdiscover.err |";
 
     for (grep /VIDEO|AUDIO|Title|Artist|Album|Year|Comment|Track|Genre/g,
         <$mplayer>)
@@ -50,12 +50,12 @@ __END__
 
 =head1 SYNOPSIS
 
-</path/to/directory> [options]
+</directory/to/scan> [options]
 
 Options:
 
   -h, -?, --help  This help / usage screen...
 
-Example: mscan ~/Music ~/Music/file.mp3
+Example: mdiscover ~/Music ~/Music/file.mp3
 
 =cut
