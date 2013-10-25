@@ -24,7 +24,7 @@ sub init {
         'help|?|h'     => \$obj{options}->{'help'},
     );
 
-    pod2usage "\nmcode-ffmpeg, FFmpeg/MP3 Encoder\n"
+    pod2usage "\nmffmpeg, FFmpeg/MP3 Encoder\n"
       if defined $obj{options}->{help}
           or not $ARGV[0];
 
@@ -36,7 +36,7 @@ sub init {
         open my $mplayer,
 
           "mplayer \"$obj{options}->{input}\" -ao null -vo null -msglevel "
-          . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> mcode-ffmpeg.err |';
+          . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> mffmpeg.err |';
 
         for (grep /^ID|CROP/g, <$mplayer>) {
 
@@ -180,7 +180,7 @@ sub run {
         print while <$mencoder>;
         close $mencoder;
     }
-    unlink 'mcode-ffmpeg.err', 'mcode-ffmpeg.pass' and exit(0);
+    unlink 'mffmpeg.err', 'mffmpeg.pass' and exit(0);
 
 }
 
@@ -203,6 +203,6 @@ Options:
   -t, --threads   How many threads to use...
   -m, --mencoder  Additional MEncoder options...
 
-Example: mcode-ffmpeg dvd://1 -o file.avi -m "-af volume=10"
+Example: mffmpeg dvd://1 -o file.avi -m "-af volume=10"
 
 =cut
