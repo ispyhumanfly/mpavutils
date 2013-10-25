@@ -12,7 +12,7 @@ my %obj;
 
 GetOptions( 'help|?|h' => \$obj{options}->{'help'} );
 
-pod2usage "\nmcode-info :: Read Media\n"
+pod2usage "\nmdiscover :: Discover A/V Media\n"
   if defined $obj{options}->{help}
       or not $ARGV[0];
 
@@ -40,7 +40,7 @@ sub process {
         when (/Genre: (.*)/x)  { say "\tGenre: $1"; }
     }
 
-    close $mplayer and unlink 'mcode-info.err';
+    close $mplayer and unlink 'mdiscover.err';
 
 }
 
@@ -50,7 +50,7 @@ __END__
 
 =head1 SYNOPSIS
 
-</path/to/file/or/directory> [options]
+</path/to/directory> [options]
 
 Options:
 
