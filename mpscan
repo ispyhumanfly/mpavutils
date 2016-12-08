@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use 5.010_000;
+use 5.018_000;
 use strict;
 use warnings;
 
@@ -15,7 +15,7 @@ my %obj;
 
 GetOptions( 'help|?|h' => \$obj{options}->{'help'} );
 
-pod2usage "\nmscan :: Scan Directories for A/V Media\n"
+pod2usage "\nmpscan :: Scan Directories for A/V Media\n"
   if defined $obj{options}->{help}
       or not $ARGV[0];
 
@@ -59,6 +59,6 @@ Options:
 
   -h, -?, --help  This help / usage screen...
 
-Example: mscan ~/Music ~/Music/file.mp3
+Example: mpscan ~/Music ~/Music/file.mp3
 
 =cut

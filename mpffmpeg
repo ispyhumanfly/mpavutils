@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use 5.010_000;
+use 5.018_000;
 use strict;
 use warnings;
 
@@ -27,7 +27,7 @@ sub init {
         'help|?|h'     => \$obj{options}->{'help'},
     );
 
-    pod2usage "\nmx264, x264/FAAC Encoder\n"
+    pod2usage "\nmpffmpeg, FFmpeg/MP3 Encoder\n"
       if defined $obj{options}->{help}
           or not $ARGV[0];
 
@@ -39,7 +39,7 @@ sub init {
         open my $mplayer,
 
           "mplayer \"$obj{options}->{input}\" -ao null -vo null -msglevel "
-          . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> mx264.err |';
+          . 'identify=6 -vf cropdetect -ss 120 -endpos 30 2> mffmpeg.err |';
 
         for (grep /^ID|CROP/g, <$mplayer>) {
 
@@ -64,10 +64,9 @@ sub init {
     }
 
     unless ((defined $obj{options}->{output})
-        and ($obj{options}->{output} =~ /\.mp4$/x))
+        and ($obj{options}->{output} =~ /\.avi$/x))
     {
-        say 'Option o must be defined and contain a .mp4 extension.'
-          and exit(1);
+        say 'Option o must be defined and have a .avi extension.' and exit(1);
     }
 
     for (keys %{$obj{options}}) {
@@ -114,7 +113,7 @@ sub init {
             unless ((defined $obj{options}->{threads})
                 and ($obj{options}->{threads} <= 16))
             {
-                $obj{options}->{threads} = 0;
+                $obj{options}->{threads} = 1;
             }
         }
     }
@@ -133,12 +132,14 @@ sub run {
         if (($pass == 1) and ($obj{options}->{pass} == 1)) {
 
             $video_opts =
-                "-ovc x264 -x264encopts threads=$obj{options}->{threads}"
-              . ':subq=5:bframes=4:cabac:b_adapt:deblock:frameref=4:b_pyramid'
-              . ":qp_step=4:weight_b:chroma_me:qcomp=0.7:bitrate=$obj{options}->{vbit}";
+                "-of avi -ovc lavc -lavcopts threads=$obj{options}->{threads}"
+              . ':vcodec=mpeg4:vstrict=-1:mbd=2:trell:v4mv:vmax_b_frames=2:autoaspect'
+              . ':cmp=256:vqcomp=0.6:vqdiff=2:vqmax=6:mpeg_quant'
+              . ':vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
+              . ":scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:vbitrate=$obj{options}->{vbit}";
 
             $audio_opts =
-              "-oac faac -faacopts mpeg=4:object=2:br=$obj{options}->{abit}";
+              "-oac mp3lame -lameopts abr:br=$obj{options}->{abit}";
         }
 
         elsif ( ($pass >= 1)
@@ -149,10 +150,12 @@ sub run {
             $multi_pass = 3 if $pass >= 2;
 
             $video_opts =
-                "-ovc x264 -x264encopts threads=$obj{options}->{threads}"
-              . ':subq=5:bframes=4:cabac:b_adapt:deblock:frameref=4:b_pyramid'
-              . ":qp_step=4:weight_b:chroma_me:qcomp=0.7:turbo=1:pass=$multi_pass"
-              . ":bitrate=$obj{options}->{vbit} -passlogfile mx264.pass";
+                "-of avi -ovc lavc -lavcopts threads=$obj{options}->{threads}"
+              . ':vcodec=mpeg4:vstrict=-1:mbd=2:trell:v4mv:vmax_b_frames=2'
+              . ':autoaspect:cmp=256:vqcomp=0.6:vqdiff=2'
+              . ':vqmax=6:mpeg_quant:vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
+              . ":scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:turbo:vpass=$multi_pass"
+              . ':vqscale=2 -passlogfile mcode-ffmpeg.pass';
 
             $audio_opts = '-nosound';
         }
@@ -160,25 +163,27 @@ sub run {
         elsif ($pass == $obj{options}->{pass}) {
 
             $video_opts =
-                "-ovc x264 -x264encopts threads=$obj{options}->{threads}"
-              . ':subq=5:bframes=4:cabac:b_adapt:deblock:frameref=4:b_pyramid'
-              . ':qp_step=4:weight_b:chroma_me:qcomp=0.7:pass=2'
-              . ":bitrate=$obj{options}->{vbit} -passlogfile mx264.pass";
+                "-of avi -ovc lavc -lavcopts threads=$obj{options}->{threads}"
+              . ':vcodec=mpeg4:vstrict=-1:mbd=2:trell:v4mv:vmax_b_frames=2'
+              . ':autoaspect:cmp=256:vqcomp=0.6:vqdiff=2'
+              . ':vqmax=6:mpeg_quant:vlelim=-4:vcelim=9:lumi_mask=0.05:dark_mask=0.01'
+              . ":scplx_mask=0.1:tcplx_mask=0.1:qprd:naq:vpass=2"
+              . ":vbitrate=$obj{options}->{vbit} -passlogfile mcode-ffmpeg.pass";
 
             $audio_opts =
-              "-oac faac -faacopts mpeg=4:object=2:br=$obj{options}->{abit}";
+              "-oac mp3lame -lameopts abr:br=$obj{options}->{abit}";
         }
 
         open my $mencoder,
 
-          "mencoder -of lavf \"$obj{options}->{input}\" -o \"$obj{options}->{output}\" "
+          "mencoder \"$obj{options}->{input}\" -o \"$obj{options}->{output}\" "
           . "-vf pullup,softskip,crop=$obj{identify}->{crop},scale=$obj{options}->{scale},harddup"
-          . " $obj{options}->{mencoder} $video_opts $audio_opts 2> mx264.err |";
+          . " $obj{options}->{mencoder} $video_opts $audio_opts 2> mcode-ffmpeg.err |";
 
         print while <$mencoder>;
         close $mencoder;
     }
-    unlink 'mx264.err', 'mx264.pass' and exit(0);
+    unlink 'mffmpeg.err', 'mffmpeg.pass' and exit(0);
 
 }
 
@@ -188,7 +193,7 @@ __END__
 
 =head1 SYNOPSIS
 
-<file/device> <-o file.mp4> [options]
+<file/device> <-o file.avi> [options]
 
 Options:
 
@@ -201,6 +206,6 @@ Options:
   -t, --threads   How many threads to use...
   -m, --mencoder  Additional MEncoder options...
 
-Example: mx264 dvd://1 -o file.mp4 -m "-af volume=10"
+Example: mpffmpeg dvd://1 -o file.avi -m "-af volume=10"
 
 =cut

@@ -1,19 +1,26 @@
 # mpavutils
-A collection of various audio and video endcoding utilities that ease transcoding and media analysis. The purpose of this collection is to offer a wide range of utilities that could prove useful when used with other more advanced solutions.
+A collection of useful audio and video endcoding utilities. The purpose of this collection is to offer a wide range of utilities that could prove useful when used in conjunction with other software.
 
 ## Synopsis
 
-Scan for media files on your file system that could be elegible for video or audio compression...
+Search for supported media files on your system.
 
-    mscan ~/Movies
+    mpscan ~/Movies
 
 Or...
 
-    mscan ~/Downloads ~/Movies mysong.mp3
+    mpscan ~/Downloads ~/Movies mysong.mp3
 
+Create a 3-pass high-quality ffmpeg movie.
+
+    mpffmpeg dvd://1 -o file.avi -m "-af volume=10"
+
+You could juse as easily do the same in x264.
+
+    mpx264 dvd://1 -o file.avi -m "-af volume=10"
 
 ## Copyright
-Copyright 2015 - 2017 Dan Stephenson (ispyhumanfly)
+Copyright 2010 - 2017 Dan Stephenson (ispyhumanfly)
 
 ## License
 MIT
